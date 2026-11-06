@@ -1,0 +1,59 @@
+name: CI - build artifacts (matrix)
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.configuration }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ Debug, Release ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output-${{ matrix.configuration }}
+          path: |
+            CalcLib/bin/${{ matrix.configuration }}/net8.0/
+            CalcLib.Tests/bin/${{ matrix.configuration }}/net8.0/
+
+  test:
+    name: Test (${{ matrix.configuration }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ Debug, Release ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output-${{ matrix.configuration }}
+          path: .
+
+      - run: dotnet test --no-build --configuration ${{ matrix.configuration }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.configuration }}
+          path: |
+            CalcLib/bin/${{ matrix.configuration }}/net8.0/
+            CalcLib.Tests/bin/${{ matrix.configuration }}/net8.0/
+          retention-days: 7
