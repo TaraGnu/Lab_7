@@ -13,21 +13,27 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [ Debug, Release ]
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
-      - run: dotnet restore
-      - run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
+      - name: Restore
+        run: dotnet restore
 
-      - uses: actions/upload-artifact@v4
+      - name: Build
+        run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-${{ matrix.configuration }}
           path: |
-            CalcLib/bin/${{ matrix.configuration }}/net8.0/
-            CalcLib.Tests/bin/${{ matrix.configuration }}/net8.0/
+            **/bin/${{ matrix.configuration }}/
+          if-no-files-found: error
 
   test:
     name: Test (${{ matrix.configuration }})
@@ -37,23 +43,19 @@ jobs:
       fail-fast: false
       matrix:
         configuration: [ Debug, Release ]
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '10.0.x' 
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output-${{ matrix.configuration }}
-          path: .
+      - name: Restore
+        run: dotnet restore
 
-      - run: dotnet test --no-build --configuration ${{ matrix.configuration }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.configuration }}
-          path: |
-            CalcLib/bin/${{ matrix.configuration }}/net8.0/
-            CalcLib.Tests/bin/${{ matrix.configuration }}/net8.0/
-          retention-days: 7
+      - name: Test
+        run: >
+          dotnet test CalcLib.Tests/CalcLib.Tests.csproj
+          --configuration ${{ matrix.configuration }}
+          --no-restore
