@@ -28,6 +28,7 @@ jobs:
             **/obj/${{ matrix.configuration }}/
   test:
     name: Test on ${{ matrix.os }} (${{ matrix.configuration }})
+    needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
