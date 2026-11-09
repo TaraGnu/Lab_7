@@ -42,5 +42,5 @@ jobs:
           dotnet-version: '10.0.x' 
       - name: Run Test ${{ matrix.configuration }}
         run: >
-          dotnet test dotnet test CalcLib.Tests/CalcLib.Tests.csproj
+          dotnet test CalcLib.Tests/CalcLib.Tests.csproj
           --configeration ${{matrix.configuration}}
